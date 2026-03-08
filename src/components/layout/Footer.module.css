@@ -1,0 +1,74 @@
+/* ════════════════════════════════════════════════════════════
+   Footer Component
+   ════════════════════════════════════════════════════════════ */
+
+.footer {
+  background: #2c3e50;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 32px 0 24px;
+  margin-top: 40px;
+}
+
+.footer__inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.footer__brand {
+  max-width: 360px;
+}
+
+.footer__logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer__desc {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.footer__links h4 {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.footer__links ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.footer__links a {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.2s;
+}
+
+.footer__links a:hover {
+  color: white;
+}
+
+.footer__bottom {
+  text-align: center;
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .footer__inner {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
