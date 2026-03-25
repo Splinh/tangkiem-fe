@@ -29,18 +29,32 @@ async function serverFetch<T>(
     });
   }
 
-  const headers: Record<string, string> = {
+  // Forward user's User-Agent so backend analytics/view count work correctly
+  // Dynamic import — only runs in server context, never bundled into client  
+  let userAgent = "";
+  try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    userAgent = headersList.get("user-agent") || "";
+  } catch {
+    // Silently ignore: throws outside server request context (generateStaticParams, client)
+  }
+
+  const reqHeaders: Record<string, string> = {
     Accept: "application/json",
     "Content-Type": "application/json",
   };
 
   if (SECRET_KEY) {
-    headers["X-Secret-Key"] = SECRET_KEY;
+    reqHeaders["X-Secret-Key"] = SECRET_KEY;
+  }
+  if (userAgent) {
+    reqHeaders["X-Forwarded-User-Agent"] = userAgent;
   }
 
   try {
     const res = await fetch(url.toString(), {
-      headers,
+      headers: reqHeaders,
       next: { revalidate: 60 }, // ISR: revalidate every 60s
     });
 

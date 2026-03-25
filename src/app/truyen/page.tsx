@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { getStories, getCategories } from "@/lib/api";
 import type { Metadata } from "next";
+import StoryListView from "@/components/story/StoryListView";
 
 export const metadata: Metadata = {
   title: "Danh sách truyện",
   description:
     "Danh sách truyện tiên hiệp, kiếm hiệp, huyền huyễn mới cập nhật tại Tàng Kiếm.",
 };
-
-function formatViews(count: number): string {
-  if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
-  if (count >= 1000) return (count / 1000).toFixed(0) + "K";
-  return count.toString();
-}
 
 export default async function StoriesPage({
   searchParams,
@@ -39,6 +34,15 @@ export default async function StoriesPage({
   const stories = storiesRes?.data || [];
   const categories = categoriesRes?.data || [];
   const meta = storiesRes?.meta;
+  const currentPage = meta?.current_page || 1;
+  const lastPage = meta?.last_page || 1;
+
+  // Build base href preserving current filters
+  const params = new URLSearchParams();
+  if (sp.category) params.set("category", sp.category);
+  if (sp.status) params.set("status", sp.status);
+  if (sp.sort) params.set("sort", sp.sort);
+  const baseHref = params.toString() ? `/truyen?${params.toString()}` : "/truyen";
 
   return (
     <div className="container">
@@ -62,15 +66,10 @@ export default async function StoriesPage({
                 alignItems: "center",
               }}
             >
-              <span
-                style={{ fontSize: "13px", fontWeight: 600, color: "#666" }}
-              >
-                Thể loại:
-              </span>
+              <span className="filter-label">Thể loại:</span>
               <Link
                 href="/truyen"
-                className="badge badge--ongoing"
-                style={{ textDecoration: "none" }}
+                className={`filter-btn ${!sp.category ? "filter-btn--active" : ""}`}
               >
                 Tất cả
               </Link>
@@ -78,15 +77,7 @@ export default async function StoriesPage({
                 <Link
                   key={cat.id}
                   href={`/truyen?category=${cat.slug}`}
-                  style={{
-                    padding: "3px 10px",
-                    fontSize: "12px",
-                    borderRadius: "3px",
-                    border: "1px solid #e0e0e0",
-                    color: sp.category === cat.slug ? "#fff" : "#555",
-                    background: sp.category === cat.slug ? "#2980b9" : "white",
-                    fontWeight: 500,
-                  }}
+                  className={`filter-btn ${sp.category === cat.slug ? "filter-btn--active" : ""}`}
                 >
                   {cat.name}
                 </Link>
@@ -101,11 +92,7 @@ export default async function StoriesPage({
                 marginTop: "8px",
               }}
             >
-              <span
-                style={{ fontSize: "13px", fontWeight: 600, color: "#666" }}
-              >
-                Trạng thái:
-              </span>
+              <span className="filter-label">Trạng thái:</span>
               {[
                 { key: "", label: "Tất cả" },
                 { key: "ongoing", label: "Đang ra" },
@@ -115,18 +102,7 @@ export default async function StoriesPage({
                 <Link
                   key={item.key}
                   href={`/truyen?${item.key ? `status=${item.key}` : ""}${sp.category ? `&category=${sp.category}` : ""}`}
-                  style={{
-                    padding: "3px 10px",
-                    fontSize: "12px",
-                    borderRadius: "3px",
-                    border: "1px solid #e0e0e0",
-                    background:
-                      (sp.status || "") === item.key ? "#2980b9" : "white",
-                    color: (sp.status || "") === item.key ? "white" : "#555",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                    textDecoration: "none",
-                  }}
+                  className={`filter-btn ${(sp.status || "") === item.key ? "filter-btn--active" : ""}`}
                 >
                   {item.label}
                 </Link>
@@ -134,114 +110,13 @@ export default async function StoriesPage({
             </div>
           </div>
 
-          {/* Story List */}
-          <div className="card card--padded">
-            {stories.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state__icon">📖</div>
-                <p className="empty-state__text">Không tìm thấy truyện nào</p>
-              </div>
-            ) : (
-              stories.map((story) => (
-                <div className="story-list-item" key={story.id}>
-                  <Link
-                    href={`/truyen/${story.slug}`}
-                    className="story-list-item__cover"
-                  >
-                    {story.cover_image ? (
-                      <img
-                        src={story.cover_image.url}
-                        alt={story.cover_image.alt}
-                      />
-                    ) : (
-                      story.title.charAt(0)
-                    )}
-                  </Link>
-                  <div className="story-list-item__info">
-                    <Link
-                      href={`/truyen/${story.slug}`}
-                      className="story-list-item__title"
-                    >
-                      {story.title}
-                      {story.is_hot && (
-                        <>
-                          {" "}
-                          <span
-                            className="badge badge--hot"
-                            style={{
-                              fontSize: "9px",
-                              padding: "1px 4px",
-                              verticalAlign: "middle",
-                            }}
-                          >
-                            HOT
-                          </span>
-                        </>
-                      )}
-                    </Link>
-                    <span className="story-list-item__author">
-                      {story.author?.name}
-                    </span>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "#888",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {story.description}
-                    </p>
-                    <div className="story-list-item__meta">
-                      <span className={`badge badge--${story.status}`}>
-                        {story.status_label}
-                      </span>
-                      {story.chapter_count > 0 && (
-                        <span>📚 {story.chapter_count} chương</span>
-                      )}
-                      {story.view_count > 0 && (
-                        <span>👁 {formatViews(story.view_count)}</span>
-                      )}
-                      {story.rating_avg > 0 && (
-                        <span>⭐ {story.rating_avg}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Pagination */}
-          {meta && meta.last_page > 1 && (
-            <div className="pagination">
-              {Array.from(
-                { length: Math.min(meta.last_page, 10) },
-                (_, i) => i + 1,
-              ).map((page) => (
-                <Link
-                  key={page}
-                  href={`/truyen?page=${page}${sp.category ? `&category=${sp.category}` : ""}${sp.status ? `&status=${sp.status}` : ""}`}
-                  className={`pagination__btn ${page === (meta.current_page || 1) ? "pagination__btn--active" : ""}`}
-                >
-                  {page}
-                </Link>
-              ))}
-              {meta.last_page > 10 && (
-                <>
-                  <span style={{ padding: "0 4px" }}>...</span>
-                  <Link
-                    href={`/truyen?page=${meta.last_page}`}
-                    className="pagination__btn"
-                  >
-                    {meta.last_page}
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
+          {/* Story Grid/List with Toggle */}
+          <StoryListView
+            stories={stories}
+            currentPage={currentPage}
+            lastPage={lastPage}
+            baseHref={baseHref}
+          />
         </div>
 
         {/* Sidebar */}
@@ -258,17 +133,10 @@ export default async function StoriesPage({
                 <Link
                   key={cat.id}
                   href={`/the-loai/${cat.slug}`}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    padding: "6px 0",
-                    fontSize: "13px",
-                    color: "#333",
-                    borderBottom: "1px dotted #eee",
-                  }}
+                  className="sidebar-cat-link"
                 >
                   <span>{cat.name}</span>
-                  <span style={{ color: "#999", fontSize: "12px" }}>
+                  <span className="sidebar-cat-link__count">
                     {cat.story_count}
                   </span>
                 </Link>

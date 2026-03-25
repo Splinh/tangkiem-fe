@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 import styles from "./Header.module.css";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
@@ -51,7 +52,10 @@ export default function Header() {
             </div>
           </form>
 
-          <button className={styles["header__mobile-toggle"]}>☰</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ThemeToggle />
+            <button className={styles["header__mobile-toggle"]}>☰</button>
+          </div>
         </div>
       </div>
 

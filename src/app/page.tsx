@@ -209,15 +209,7 @@ export default async function HomePage() {
                 <Link
                   key={cat.id}
                   href={`/the-loai/${cat.slug}`}
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: "12px",
-                    background: "#f0f4ff",
-                    borderRadius: "12px",
-                    color: "#2a5298",
-                    fontWeight: 500,
-                    transition: "all 0.2s",
-                  }}
+                  className="category-tag"
                 >
                   {cat.name}
                 </Link>

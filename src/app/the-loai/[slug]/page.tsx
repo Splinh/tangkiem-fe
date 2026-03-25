@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { getCategoryStories, getCategories } from "@/lib/api";
-import type { Story } from "@/lib/types";
 import type { Metadata } from "next";
+import CategoryStoryList from "@/components/story/CategoryStoryList";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -18,50 +21,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-function StoryCard({ story }: { story: Story }) {
-  return (
-    <div className="story-card">
-      <Link href={`/truyen/${story.slug}`}>
-        <div className="story-card__cover">
-          {story.cover_image ? (
-            <img src={story.cover_image.url} alt={story.cover_image.alt} />
-          ) : (
-            story.title.charAt(0)
-          )}
-          <div className="story-card__badges">
-            {story.is_hot && <span className="badge badge--hot">HOT</span>}
-          </div>
-          {story.chapter_count > 0 && (
-            <div className="story-card__chapters">
-              {story.chapter_count} chương
-            </div>
-          )}
-        </div>
-      </Link>
-      <div className="story-card__body">
-        <Link href={`/truyen/${story.slug}`} className="story-card__title">
-          {story.title}
-        </Link>
-        <span className="story-card__category">{story.author?.name}</span>
-      </div>
-    </div>
-  );
-}
-
-export default async function CategoryDetailPage({ params }: Props) {
+export default async function CategoryDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { page = "1" } = await searchParams;
 
   let category;
-  let stories: Story[] = [];
+  let storiesMeta;
   let categoriesList;
 
   try {
     const [catRes, allCatsRes] = await Promise.all([
-      getCategoryStories(slug),
+      getCategoryStories(slug, { page, per_page: "20" }),
       getCategories(),
     ]);
     category = catRes.data;
-    stories = catRes.stories?.data || [];
+    storiesMeta = catRes.stories;
     categoriesList = allCatsRes.data || [];
   } catch {
     return (
@@ -69,10 +43,7 @@ export default async function CategoryDetailPage({ params }: Props) {
         <div className="empty-state">
           <div className="empty-state__icon">📚</div>
           <p className="empty-state__text">Không tìm thấy thể loại này</p>
-          <Link
-            href="/the-loai"
-            style={{ marginTop: "16px", display: "inline-block" }}
-          >
+          <Link href="/the-loai" style={{ marginTop: "16px", display: "inline-block" }}>
             ← Quay lại thể loại
           </Link>
         </div>
@@ -80,19 +51,19 @@ export default async function CategoryDetailPage({ params }: Props) {
     );
   }
 
+  const stories = storiesMeta?.data || [];
+  const currentPage = storiesMeta?.meta?.current_page || 1;
+  const lastPage = storiesMeta?.meta?.last_page || 1;
+
   return (
     <div className="container">
       {/* Breadcrumb */}
-      <nav style={{ padding: "12px 0", fontSize: "13px", color: "#999" }}>
-        <Link href="/" style={{ color: "#999" }}>
-          Trang chủ
-        </Link>
-        <span style={{ margin: "0 6px" }}>/</span>
-        <Link href="/the-loai" style={{ color: "#999" }}>
-          Thể loại
-        </Link>
-        <span style={{ margin: "0 6px" }}>/</span>
-        <span style={{ color: "#333" }}>{category.name}</span>
+      <nav className="breadcrumb">
+        <Link href="/">Trang chủ</Link>
+        <span className="breadcrumb__sep">/</span>
+        <Link href="/the-loai">Thể loại</Link>
+        <span className="breadcrumb__sep">/</span>
+        <span className="breadcrumb__current">{category.name}</span>
       </nav>
 
       <div className="page-layout">
@@ -105,20 +76,13 @@ export default async function CategoryDetailPage({ params }: Props) {
             </span>
           </h1>
 
-          {stories.length > 0 ? (
-            <div className="story-grid">
-              {stories.map((story) => (
-                <StoryCard key={story.id} story={story} />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-state__icon">📖</div>
-              <p className="empty-state__text">
-                Chưa có truyện trong thể loại này
-              </p>
-            </div>
-          )}
+          {/* Client component: handles list/grid toggle + pagination */}
+          <CategoryStoryList
+            stories={stories}
+            currentPage={currentPage}
+            lastPage={lastPage}
+            slug={slug}
+          />
         </div>
 
         <aside className="page-layout__sidebar">
@@ -127,26 +91,17 @@ export default async function CategoryDetailPage({ params }: Props) {
               <span className="section-title__icon">📚</span>
               Thể Loại Khác
             </h3>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
               {(categoriesList || [])
                 .filter((c) => c.slug !== slug)
                 .map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/the-loai/${cat.slug}`}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: "6px 0",
-                      fontSize: "13px",
-                      color: "#333",
-                      borderBottom: "1px dotted #eee",
-                    }}
+                    className="sidebar-cat-link"
                   >
                     <span>{cat.name}</span>
-                    <span style={{ color: "#999", fontSize: "12px" }}>
+                    <span className="sidebar-cat-link__count">
                       {cat.story_count}
                     </span>
                   </Link>

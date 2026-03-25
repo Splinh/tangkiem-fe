@@ -74,16 +74,12 @@ export default async function StoryDetailPage({ params }: Props) {
   return (
     <div className="container">
       {/* Breadcrumb */}
-      <nav style={{ padding: "12px 0", fontSize: "13px", color: "#999" }}>
-        <Link href="/" style={{ color: "#999" }}>
-          Trang chủ
-        </Link>
-        <span style={{ margin: "0 6px" }}>/</span>
-        <Link href="/truyen" style={{ color: "#999" }}>
-          Truyện
-        </Link>
-        <span style={{ margin: "0 6px" }}>/</span>
-        <span style={{ color: "#333" }}>{story.title}</span>
+      <nav className="breadcrumb">
+        <Link href="/">Trang chủ</Link>
+        <span className="breadcrumb__sep">/</span>
+        <Link href="/truyen">Truyện</Link>
+        <span className="breadcrumb__sep">/</span>
+        <span className="breadcrumb__current">{story.title}</span>
       </nav>
 
       {/* Story Info Card */}
@@ -106,7 +102,6 @@ export default async function StoryDetailPage({ params }: Props) {
                   <td>
                     <Link
                       href={`/truyen?author=${story.author?.slug}`}
-                      style={{ color: "#2a5298" }}
                     >
                       {story.author?.name || "Đang cập nhật"}
                     </Link>
@@ -117,7 +112,6 @@ export default async function StoryDetailPage({ params }: Props) {
                   <td>
                     <Link
                       href={`/the-loai/${story.primary_category?.slug}`}
-                      style={{ color: "#2a5298" }}
                     >
                       {story.primary_category?.name}
                     </Link>
@@ -143,13 +137,7 @@ export default async function StoryDetailPage({ params }: Props) {
                   <th>Đánh giá</th>
                   <td>
                     <RatingStars rating={story.rating_avg} />
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#999",
-                        marginLeft: "8px",
-                      }}
-                    >
+                    <span className="text-muted-sm" style={{ marginLeft: "8px" }}>
                       ({story.rating_count} đánh giá)
                     </span>
                   </td>
@@ -164,20 +152,18 @@ export default async function StoryDetailPage({ params }: Props) {
             </table>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+            <div className="flex gap-8 mt-16 flex-wrap">
               {chapters.length > 0 && (
                 <>
                   <Link
                     href={`/truyen/${story.slug}/${chapters[0].slug}`}
                     className="reader__nav-btn reader__nav-btn--next"
-                    style={{ textDecoration: "none" }}
                   >
                     📖 Đọc từ đầu
                   </Link>
                   <Link
                     href={`/truyen/${story.slug}/${chapters[chapters.length - 1].slug}`}
-                    className="reader__nav-btn reader__nav-btn--prev"
-                    style={{ textDecoration: "none" }}
+                    className="reader__nav-btn reader__nav-btn--list"
                   >
                     📖 Đọc mới nhất
                   </Link>
@@ -223,9 +209,7 @@ export default async function StoryDetailPage({ params }: Props) {
               </div>
             ))
           ) : (
-            <p
-              style={{ color: "#999", padding: "20px 0", textAlign: "center" }}
-            >
+            <p className="text-muted-sm" style={{ padding: "20px 0", textAlign: "center" }}>
               Chưa có chương nào
             </p>
           )}
